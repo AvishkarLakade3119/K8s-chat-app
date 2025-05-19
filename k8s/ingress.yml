@@ -14,18 +14,17 @@ spec:
   - host: chat-avi.com
     http:
       paths:
-      - path: /
-        pathType: Prefix
-        backend:
+      - pathType: Prefix
+        path: "/"
+        backend: 
           service:
             name: frontend
-            port:
+            port: 
               number: 80
-      - path: /api
-        pathType: Prefix
-        backend:
+      - pathType: Prefix
+        path: "/api"
+        backend: 
           service:
             name: backend
-            port:
+            port: 
               number: 5001
-
