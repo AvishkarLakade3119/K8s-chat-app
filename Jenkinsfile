@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')  // You must set this ID in Jenkins
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')  // Jenkins credential ID
         DOCKERHUB_USER = 'avishkarlakade'
         IMAGE_FRONTEND = 'chatapp-frontend'
         IMAGE_BACKEND = 'chatapp-backend'
@@ -11,7 +11,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/AvishkarLakade3119/K8s-chat-app.git'
+                git branch: 'main', url: 'https://github.com/AvishkarLakade3119/K8s-chat-app.git'
             }
         }
 
