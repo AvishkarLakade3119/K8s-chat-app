@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub')  // Jenkins credential ID
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')  // Jenkins credential ID
         DOCKERHUB_USER = 'avishkarlakade'
         IMAGE_FRONTEND = 'chatapp-frontend'
         IMAGE_BACKEND = 'chatapp-backend'
