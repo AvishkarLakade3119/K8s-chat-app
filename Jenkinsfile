@@ -2,54 +2,55 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
-        FRONTEND_IMAGE = 'avishkarlakade/chatapp-frontend'
-        BACKEND_IMAGE = 'avishkarlakade/chatapp-backend'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')  // You must set this ID in Jenkins
+        DOCKERHUB_USER = 'avishkarlakade'
+        IMAGE_FRONTEND = 'chatapp-frontend'
+        IMAGE_BACKEND = 'chatapp-backend'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
                 git 'https://github.com/AvishkarLakade3119/K8s-chat-app.git'
             }
         }
 
-        stage('Build Backend Image') {
-            steps {
-                dir('backend') {
-                    script {
-                        docker.build("${BACKEND_IMAGE}:latest", '.')
-                    }
-                }
-            }
-        }
-
-        stage('Build Frontend Image') {
+        stage('Build Frontend Docker Image') {
             steps {
                 dir('frontend') {
                     script {
-                        docker.build("${FRONTEND_IMAGE}:latest", '.')
+                        sh 'docker build -t $DOCKERHUB_USER/$IMAGE_FRONTEND:latest .'
                     }
                 }
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Build Backend Docker Image') {
+            steps {
+                dir('backend') {
+                    script {
+                        sh 'docker build -t $DOCKERHUB_USER/$IMAGE_BACKEND:latest .'
+                    }
+                }
+            }
+        }
+
+        stage('Push Images to DockerHub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
-                        docker.image("${BACKEND_IMAGE}:latest").push()
-                        docker.image("${FRONTEND_IMAGE}:latest").push()
-                    }
+                    sh """
+                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
+                    docker push $DOCKERHUB_USER/$IMAGE_FRONTEND:latest
+                    docker push $DOCKERHUB_USER/$IMAGE_BACKEND:latest
+                    """
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to Kubernetes (Optional)') {
             steps {
                 dir('k8s') {
-                    sh 'kubectl apply -f backend-deployment.yaml'
-                    sh 'kubectl apply -f frontend-deployment.yaml'
+                    sh 'kubectl apply -f .'
                 }
             }
         }
