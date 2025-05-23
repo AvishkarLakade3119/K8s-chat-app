@@ -2,51 +2,56 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('docker-hub-creds') // Jenkins ID created in Jenkins > Credentials
+        DOCKER_CREDENTIALS_ID = 'dockerhub-creds'
         FRONTEND_IMAGE = 'avishkarlakade/chatapp-frontend'
-        BACKEND_IMAGE  = 'avishkarlakade/chatapp-backend'
-        KUBE_NAMESPACE = 'chat-app'  // adjust if needed
+        BACKEND_IMAGE = 'avishkarlakade/chatapp-backend'
     }
 
     stages {
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/AvishkarLakade3119/Chatbot-React-App.git'
+                git 'https://github.com/AvishkarLakade3119/K8s-chat-app.git'
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Backend Image') {
             steps {
-                sh 'docker build -t $FRONTEND_IMAGE:latest ./frontend'
-                sh 'docker build -t $BACKEND_IMAGE:latest ./backend'
+                dir('backend') {
+                    script {
+                        docker.build("${BACKEND_IMAGE}:latest", '.')
+                    }
+                }
             }
         }
 
-        stage('Push Images to Docker Hub') {
+        stage('Build Frontend Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push $FRONTEND_IMAGE:latest
-                        docker push $BACKEND_IMAGE:latest
-                    '''
+                dir('frontend') {
+                    script {
+                        docker.build("${FRONTEND_IMAGE}:latest", '.')
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        docker.image("${BACKEND_IMAGE}:latest").push()
+                        docker.image("${FRONTEND_IMAGE}:latest").push()
+                    }
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/'
+                dir('k8s') {
+                    sh 'kubectl apply -f backend-deployment.yaml'
+                    sh 'kubectl apply -f frontend-deployment.yaml'
+                }
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ CI/CD Pipeline executed successfully!'
-        }
-        failure {
-            echo '❌ Pipeline failed!'
         }
     }
 }
