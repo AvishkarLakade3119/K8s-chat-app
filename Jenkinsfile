@@ -3,10 +3,10 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'  // Jenkins credentials ID for DockerHub
-        DOCKERHUB_NAMESPACE = 'avishkarlakade' // Your DockerHub username
-        BACKEND_IMAGE = "${avishkarlakade/chatapp-backend}/chatapp-backend"
-        FRONTEND_IMAGE = "${avishkarlakade/chatapp-frontend}/chatapp-frontend"
-        KUBECONFIG = '/home/jenkins/.kube/config'  // Adjust this path inside Jenkins container
+        DOCKERHUB_NAMESPACE = 'avishkarlakade'           // Your DockerHub username
+        BACKEND_IMAGE = "avishkarlakade/chatapp-backend" // Correct string syntax, no ${} needed here
+        FRONTEND_IMAGE = "avishkarlakade/chatapp-frontend"
+        KUBECONFIG = '/home/jenkins/.kube/config'        // Adjust if needed in your Jenkins container
         K8S_NAMESPACE = 'chat-app'
     }
 
@@ -45,14 +45,12 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Update deployments to use the new images
                     sh """
-                      kubectl --kubeconfig=${KUBECONFIG} -n ${K8S_NAMESPACE} set image deployment/backend-deployment backend-container=${BACKEND_IMAGE}:latest
-                      kubectl --kubeconfig=${KUBECONFIG} -n ${K8S_NAMESPACE} set image deployment/frontend-deployment frontend-container=${FRONTEND_IMAGE}:latest
+                      kubectl -n ${K8S_NAMESPACE} set image deployment/backend-deployment chatapp-backend=${BACKEND_IMAGE}:latest
+                      kubectl -n ${K8S_NAMESPACE} set image deployment/frontend-deployment chatapp-frontend=${FRONTEND_IMAGE}:latest
 
-                      # Wait for rollout to finish
-                      kubectl --kubeconfig=${KUBECONFIG} -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment
-                      kubectl --kubeconfig=${KUBECONFIG} -n ${K8S_NAMESPACE} rollout status deployment/frontend-deployment
+                      kubectl -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment
+                      kubectl -n ${K8S_NAMESPACE} rollout status deployment/frontend-deployment
                     """
                 }
             }
