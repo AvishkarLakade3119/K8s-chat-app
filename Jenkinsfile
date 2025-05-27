@@ -1,15 +1,12 @@
 pipeline {
     agent any
-    options {
-        timestamps()
-    }
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'     // Jenkins credentials ID
-        DOCKERHUB_NAMESPACE = 'avishkarlakade'              // Your DockerHub username
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
+        DOCKERHUB_NAMESPACE = 'avishkarlakade'
         BACKEND_IMAGE = "avishkarlakade/chatapp-backend"
         FRONTEND_IMAGE = "avishkarlakade/chatapp-frontend"
-        KUBECONFIG = '/home/jenkins/.kube/config'           // Ensure this exists inside the container
+        KUBECONFIG = '/home/jenkins/.kube/config'
         K8S_NAMESPACE = 'chat-app'
     }
 
