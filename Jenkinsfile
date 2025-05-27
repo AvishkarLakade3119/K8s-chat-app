@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'  // Jenkins credentials ID for DockerHub
         DOCKERHUB_NAMESPACE = 'avishkarlakade'           // Your DockerHub username
-        BACKEND_IMAGE = "avishkarlakade/chatapp-backend" // Correct string syntax, no ${} needed here
+        BACKEND_IMAGE = "avishkarlakade/chatapp-backend"
         FRONTEND_IMAGE = "avishkarlakade/chatapp-frontend"
         KUBECONFIG = '/home/jenkins/.kube/config'        // Adjust if needed in your Jenkins container
         K8S_NAMESPACE = 'chat-app'
@@ -35,9 +35,11 @@ pipeline {
 
         stage('Push Images') {
             steps {
-                withDockerRegistry([credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '']) {
-                    docker.image("${BACKEND_IMAGE}:latest").push()
-                    docker.image("${FRONTEND_IMAGE}:latest").push()
+                script {
+                    withDockerRegistry([credentialsId: "${DOCKERHUB_CREDENTIALS}", url: '']) {
+                        docker.image("${BACKEND_IMAGE}:latest").push()
+                        docker.image("${FRONTEND_IMAGE}:latest").push()
+                    }
                 }
             }
         }
