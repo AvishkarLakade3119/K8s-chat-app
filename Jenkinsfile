@@ -56,7 +56,7 @@ pipeline {
                 echo 'Deploying to Kubernetes cluster...'
                 script {
                     sh """
-                        kubectl -n ${K8S_NAMESPACE} set image deployment/backend-deployment backend=${BACKEND_IMAGE}:latest
+                        kubectl -n ${K8S_NAMESPACE} set image deployment/backend-deployment chatapp-backend=${BACKEND_IMAGE}:latest
                         kubectl -n ${K8S_NAMESPACE} set image deployment/frontend-deployment frontend=${FRONTEND_IMAGE}:latest
 
                         kubectl -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment
