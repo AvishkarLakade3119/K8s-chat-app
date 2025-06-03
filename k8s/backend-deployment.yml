@@ -16,7 +16,7 @@ spec:
         app: backend
     spec:
       containers:
-      - name: chatapp-backend
+      - name: backend
         image: avishkarlakade/chatapp-backend:latest
         ports:
         - containerPort: 5001
