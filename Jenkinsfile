@@ -56,9 +56,13 @@ pipeline {
                 echo 'Deploying to Kubernetes cluster...'
                 script {
                     sh """
-                        kubectl -n ${K8S_NAMESPACE} set image deployment/backend-deployment chatapp-backend=${BACKEND_IMAGE}:latest
-                        kubectl -n ${K8S_NAMESPACE} set image deployment/frontend-deployment chatapp-frontend=${FRONTEND_IMAGE}:latest
+                        # Create namespace if it does not exist
+                        kubectl get namespace ${K8S_NAMESPACE} || kubectl create namespace ${K8S_NAMESPACE}
 
+                        # Apply Kubernetes manifests
+                        kubectl apply -n ${K8S_NAMESPACE} -f ./k8s/
+
+                        # Rollout status for backend and frontend
                         kubectl -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment
                         kubectl -n ${K8S_NAMESPACE} rollout status deployment/frontend-deployment
                     """
@@ -74,3 +78,4 @@ pipeline {
         }
     }
 }
+
