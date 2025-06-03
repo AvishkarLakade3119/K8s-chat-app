@@ -62,16 +62,30 @@ pipeline {
                         # Apply Kubernetes manifests
                         kubectl apply -n ${K8S_NAMESPACE} -f ./k8s/
 
-                        # Expose services (in case they aren't already)
-                        kubectl expose deployment frontend-deployment --type=NodePort --name=frontend --port=80 --target-port=80 -n ${K8S_NAMESPACE} || true
-                        kubectl expose deployment backend-deployment --type=NodePort --name=backend --port=5001 --target-port=5001 -n ${K8S_NAMESPACE} || true
-                        kubectl expose deployment mongodb-deployment --type=NodePort --name=mongodb --port=27017 --target-port=27017 -n ${K8S_NAMESPACE} || true
-
-                        # Rollout status checks
+                        # Rollout status checks (run in background)
                         kubectl -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment &
                         kubectl -n ${K8S_NAMESPACE} rollout status deployment/frontend-deployment &
 
                         wait
+                    """
+                }
+            }
+        }
+
+        stage('Port Forward Services') {
+            steps {
+                echo 'Starting background port-forwarding for frontend (80), backend (5001), and MongoDB (27017)...'
+                script {
+                    sh """
+                        # Kill any old port-forwarding processes to avoid conflicts
+                        pkill -f 'kubectl port-forward' || true
+
+                        # Start port-forwarding each service in background with nohup
+                        nohup kubectl port-forward service/frontend 80:80 -n ${K8S_NAMESPACE} > /tmp/frontend-pf.log 2>&1 &
+                        nohup kubectl port-forward service/backend 5001:5001 -n ${K8S_NAMESPACE} > /tmp/backend-pf.log 2>&1 &
+                        nohup kubectl port-forward service/mongodb 27017:27017 -n ${K8S_NAMESPACE} > /tmp/mongodb-pf.log 2>&1 &
+
+                        echo "Port forwarding started successfully."
                     """
                 }
             }
