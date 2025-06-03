@@ -62,9 +62,16 @@ pipeline {
                         # Apply Kubernetes manifests
                         kubectl apply -n ${K8S_NAMESPACE} -f ./k8s/
 
-                        # Rollout status for backend and frontend
-                        kubectl -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment
-                        kubectl -n ${K8S_NAMESPACE} rollout status deployment/frontend-deployment
+                        # Expose services (in case they aren't already)
+                        kubectl expose deployment frontend-deployment --type=NodePort --name=frontend --port=80 --target-port=80 -n ${K8S_NAMESPACE} || true
+                        kubectl expose deployment backend-deployment --type=NodePort --name=backend --port=5001 --target-port=5001 -n ${K8S_NAMESPACE} || true
+                        kubectl expose deployment mongodb-deployment --type=NodePort --name=mongodb --port=27017 --target-port=27017 -n ${K8S_NAMESPACE} || true
+
+                        # Rollout status checks
+                        kubectl -n ${K8S_NAMESPACE} rollout status deployment/backend-deployment &
+                        kubectl -n ${K8S_NAMESPACE} rollout status deployment/frontend-deployment &
+
+                        wait
                     """
                 }
             }
@@ -78,4 +85,3 @@ pipeline {
         }
     }
 }
-
